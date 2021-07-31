@@ -21,7 +21,12 @@ const refs = {
   modalCloseBtn: document.querySelector('button[data-action="close-lightbox"]'),
 };
 
-const createGalleryMurkup = galleryItems => {
+refs.galleryEl.insertAdjacentHTML("beforeEnd", createGalleryMurkup(galleryItems));
+refs.galleryEl.addEventListener("click", onImageClick);
+document.addEventListener("keydown", onESCKeydown);
+document.addEventListener("keydown", onArrowPress);
+
+function createGalleryMurkup(galleryItems) {
   return galleryItems
     .map(
       ({ preview, original, description }) => `
@@ -40,14 +45,9 @@ const createGalleryMurkup = galleryItems => {
 </li>`,
     )
     .join("");
-};
+}
 
-refs.galleryEl.insertAdjacentHTML(
-  "beforeEnd",
-  createGalleryMurkup(galleryItems),
-);
-
-const onImageClick = e => {
+function onImageClick(e) {
   if (e.target.nodeName !== "IMG") {
     return;
   }
@@ -56,26 +56,48 @@ const onImageClick = e => {
   refs.modalEl.classList.add("is-open");
   refs.modalImgEl.src = e.target.closest(".gallery__link").href;
   refs.modalImgEl.alt = e.target.alt;
-};
 
-refs.galleryEl.addEventListener("click", onImageClick);
+  refs.modalCloseBtn.addEventListener("click", onModalCloseBtnClick);
+  refs.overlayEl.addEventListener("click", onModalCloseBtnClick);
+  // findCurrentImgIndex();
+}
 
-const onModalCloseBtnClick = () => {
+function onModalCloseBtnClick() {
   refs.modalEl.classList.remove("is-open");
   refs.modalImgEl.src = "";
   refs.modalImgEl.alt = "";
-};
+  refs.modalCloseBtn.removeEventListener("click", onModalCloseBtnClick);
+  refs.overlayEl.removeEventListener("click", onModalCloseBtnClick);
+}
 
-refs.modalCloseBtn.addEventListener("click", onModalCloseBtnClick);
-refs.overlayEl.addEventListener("click", onModalCloseBtnClick);
-
-const onESCKeydown = e => {
+function onESCKeydown(e) {
   if (e.code !== "Escape") {
     return;
   }
-  refs.modalEl.classList.remove("is-open");
-  refs.modalImgEl.src = "";
-  refs.modalImgEl.alt = "";
-};
+  onModalCloseBtnClick();
+}
 
-document.addEventListener("keydown", onESCKeydown);
+let currentImgIndex = 0;
+function onArrowPress() {
+  if (refs.modalEl.classList.contains("is-open")) {
+    const currentImgSrc = refs.modalImgEl.src;
+    currentImgIndex = galleryItems.indexOf(galleryItems.find(item => item.original === currentImgSrc));
+    // console.log(currentImgIndex);
+  }
+  if (event.code === "ArrowRight") turnRight(currentImgIndex);
+  if (event.code === "ArrowLeft") turnLeft(currentImgIndex);
+}
+
+function turnRight(currentImgIndex) {
+  if (currentImgIndex === galleryItems.length - 1) return;
+  const nextImg = galleryItems[currentImgIndex + 1];
+  refs.modalImgEl.src = nextImg.original;
+  refs.modalImgEl.alt = nextImg.description;
+}
+
+function turnLeft(currentImgIndex) {
+  if (currentImgIndex === 0) return;
+  const previosImg = galleryItems[currentImgIndex - 1];
+  refs.modalImgEl.src = previosImg.original;
+  refs.modalImgEl.alt = previosImg.description;
+}
