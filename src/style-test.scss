@@ -1,0 +1,8 @@
+:root {
+  --main-color: yellow;
+}
+body {
+  @media screen and (max-width: 1000px) {
+    background-color: var(--main-color);
+  }
+}
